@@ -44,7 +44,7 @@ macro_rules! process_field {
         let selector_fun_extern: extern "C" fn(&mut Object, Sel, $($sel_type),*) -> $ret_type = selector_fun;
 
         unsafe {
-            $class_dec.add_method(sel!($($sel_local_name:)*), selector_fun_extern);
+            $class_dec.add_method(sel!($($sel_name:)*), selector_fun_extern);
         }
     }};
     ($class_dec:expr, ($access:ident $field_name:ident : $ty_name:ident)) => {
@@ -67,18 +67,34 @@ macro_rules! register_class {
     }};
 }
 
-fn register_test() {
-    extern "C" fn obj_method(obj: &mut Object, sel: Sel, i1: i32, i2: i32) -> i32 {
-        return 3;
-    }
-    let my_method: extern "C" fn(&mut Object, Sel, i32, i32) -> i32 = obj_method;
+#[cfg(test)]
+mod test {
+    use objc::rc::StrongPtr;
+    #[macro_use]
+    use super::*;
 
-    let my_box_class = register_class!(MyBox:NSObject with {
-        (pub width: u32),
-        (priv height: u32),
-        (sel getThing:withOtherThing: <- my_method),
-        (sel getThing2:(u32)t1 withOtherThing:(u32)t2 -> u32 with |obj, sel| {
-            return 5
-        }),
-    });
+    #[test]
+    fn register_test() {
+        extern "C" fn obj_method(obj: &mut Object, sel: Sel, i1: i32, i2: i32) -> i32 {
+            return 11;
+        }
+        let my_method: extern "C" fn(&mut Object, Sel, i32, i32) -> i32 = obj_method;
+
+        let my_box_class = register_class!(MyBox:NSObject with {
+            (pub width: u32),
+            (priv height: u32),
+            (sel getThing:withOtherThing: <- my_method),
+            (sel add:(i32)t1 with:(i32)t2 -> i32 with |obj, sel| {
+                return t1+t2;
+            }),
+        });
+        let obj = unsafe {
+            let obj: *mut Object = msg_send![my_box_class, alloc];
+            let obj: *mut Object = msg_send![obj, init];
+            StrongPtr::new(obj)
+        };
+        let x: i32 = unsafe { msg_send![*obj, add:5i32 with:6i32] };
+
+        assert_eq!(x, 11);
+    }
 }
