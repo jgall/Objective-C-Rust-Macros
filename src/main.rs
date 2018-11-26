@@ -24,10 +24,12 @@ fn register_my_num() {
         (priv height: u32),
         (sel getThing:withOtherThing: <- my_method),
     });
-    print_class_stats(my_box_class)
+    let obj = print_class_stats(my_box_class);
+    let x: i32 = unsafe { msg_send![*obj, getThing:5i32 withOtherThing:6i32] };
+    println!("received: {}", x);
 }
 
-fn print_class_stats(cls: &objc::runtime::Class) {
+fn print_class_stats(cls: &objc::runtime::Class) -> StrongPtr {
     println!("NSObject size: {}", cls.instance_size());
 
     // Inspect its ivars
@@ -58,4 +60,5 @@ fn print_class_stats(cls: &objc::runtime::Class) {
     // Invoke a method on the object
     let hash: usize = unsafe { msg_send![*obj, hash] };
     println!("NSObject hash: {}", hash);
+    return obj;
 }
