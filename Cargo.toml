@@ -1,0 +1,8 @@
+[package]
+name = "obj_c_rust_test"
+version = "0.1.0"
+authors = ["John Gallagher <john.willis.gallagher@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+objc = "0.2.5"
