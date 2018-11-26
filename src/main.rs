@@ -23,6 +23,9 @@ fn register_my_num() {
         (pub width: u32),
         (priv height: u32),
         (sel getThing:withOtherThing: <- my_method),
+        (sel getThing2:(u32)t1 withOtherThing:(u32)t2 -> u32 with |obj, sel| {
+            return 5
+        }),
     });
     let obj = print_class_stats(my_box_class);
     let x: i32 = unsafe { msg_send![*obj, getThing:5i32 withOtherThing:6i32] };
