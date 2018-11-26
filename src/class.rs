@@ -1,4 +1,3 @@
-
 use objc::declare::ClassDecl;
 use objc::rc::StrongPtr;
 use objc::runtime::{Class, Object, Sel};
@@ -16,11 +15,16 @@ macro_rules! add_pub_ivar {
             $decl.add_method(sel!($name), getter_extern);
         }
         extern "C" fn setter(this: &mut Object, _cmd: Sel, value: $type) {
-            unsafe { this.set_ivar::<$type>(concat!("_", stringify!($name)), value); }
+            unsafe {
+                this.set_ivar::<$type>(concat!("_", stringify!($name)), value);
+            }
         }
         let extern_setter: extern "C" fn(&mut Object, Sel, $type) = setter;
         unsafe {
-            $decl.add_method(sel_impl!(concat!(stringify!($name), ':', '\0')), extern_setter);
+            $decl.add_method(
+                sel_impl!(concat!(stringify!($name), ':', '\0')),
+                extern_setter,
+            );
         }
         concat!("_", stringify!($name))
     }};
@@ -44,7 +48,7 @@ macro_rules! register_class {
     }};
 }
 
-fn register_my_num() {
+fn register_test() {
     let my_box_class = register_class!(MyBox:NSObject with {
         pub width: u32,
         priv height: u32,
