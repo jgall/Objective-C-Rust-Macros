@@ -20,9 +20,15 @@ fn test2() {
 }
 
 fn register_my_num() {
+    extern "C" fn obj_method(obj: &mut Object, sel: Sel, i1: i32, i2: i32) -> i32 {
+        return 3;
+    }
+    let protocol_class_method: extern "C" fn(&mut Object, Sel, i32, i32) -> i32 = obj_method;
+
     let my_box_class = register_class!(MyBox:NSObject with {
-        pub width: u32,
-        priv height: u32,
+        (pub width: u32),
+        (priv height: u32),
+        (sel getThing:withOtherThing: <- protocol_class_method),
     });
     print_class_stats(my_box_class)
 }

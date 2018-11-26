@@ -34,23 +34,41 @@ macro_rules! add_pub_ivar {
     }};
 }
 
+macro_rules! process_field {
+    ($class_dec:expr, (sel $($sel_name:ident :)* <- $fun_name:expr)) => {{
+        unsafe {
+            $class_dec.add_method(sel!($($sel_name :)*), $fun_name)
+        }
+    }};
+    ($class_dec:expr, ($access:ident $field_name:ident : $ty_name:ident)) => {
+        add_pub_ivar!($access, $field_name, $class_dec, $ty_name);
+    };
+}
+
 #[macro_export]
 macro_rules! register_class {
     ($name:ident : $parent:ident with {
-        $($access:ident $field_name:ident : $ty_name:ident,)*
+        $($addition:tt,)*
     }) => {{
         let superclass = class!($parent);
         let mut my_class = ClassDecl::new(stringify!($name), superclass).unwrap();
         $(
-            add_pub_ivar!($access, $field_name, my_class, $ty_name);
+            process_field!(my_class, $addition);
+            //add_pub_ivar!($access, $field_name,$ty_name);
         )*
         my_class.register()
     }};
 }
 
 fn register_test() {
+    extern "C" fn obj_method(obj: &mut Object, sel: Sel, i1: i32, i2: i32) -> i32 {
+        return 3;
+    }
+    let protocol_class_method: extern "C" fn(&mut Object, Sel, i32, i32) -> i32 = obj_method;
+
     let my_box_class = register_class!(MyBox:NSObject with {
-        pub width: u32,
-        priv height: u32,
+        (pub width: u32),
+        (priv height: u32),
+        (sel getThing:withOtherThing: <- protocol_class_method),
     });
 }
