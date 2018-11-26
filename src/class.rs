@@ -40,7 +40,12 @@ macro_rules! process_field {
     }};
     ($class_dec:expr, (sel $($sel_name:ident : ($sel_type:ident) $sel_local_name:ident)*
         -> $ret_type:ident with |$obj:ident, $sel:ident| $body:tt)) => {{
+        extern "C" fn selector_fun($obj: &mut Object, $sel: Sel, $($sel_local_name:$sel_type),*) -> $ret_type $body
+        let selector_fun_extern: extern "C" fn(&mut Object, Sel, $($sel_type),*) -> $ret_type = selector_fun;
 
+        unsafe {
+            $class_dec.add_method(sel!($($sel_local_name:)*), selector_fun_extern);
+        }
     }};
     ($class_dec:expr, ($access:ident $field_name:ident : $ty_name:ident)) => {
         add_pub_ivar!($access, $field_name, $class_dec, $ty_name);
