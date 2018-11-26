@@ -1,7 +1,5 @@
 use objc::declare::ClassDecl;
-use objc::rc::StrongPtr;
-use objc::runtime::{Class, Object, Sel};
-use objc::Encode;
+use objc::runtime::{Object, Sel};
 
 #[macro_export]
 macro_rules! add_pub_ivar {
