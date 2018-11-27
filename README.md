@@ -9,3 +9,6 @@ Why does this exist? Who knows... but it lets you do cool stuff like this:
                 return t1+t2;
             }),
         });
+
+        let x: i32 = unsafe { msg_send![*obj, add:5 with:6] };
+        assert_eq!(x, 11);
