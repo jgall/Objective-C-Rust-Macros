@@ -1,5 +1,5 @@
 use objc::declare::ClassDecl;
-use objc::runtime::{Object, Sel};
+use objc::runtime::{Class, Object, Sel};
 
 #[macro_export]
 macro_rules! add_pub_ivar {
@@ -47,6 +47,15 @@ macro_rules! process_field {
             $class_dec.add_method(sel!($($sel_name:)*), selector_fun_extern);
         }
     }};
+    ($class_dec:expr, (static sel $($sel_name:ident : ($sel_type:ident) $sel_local_name:ident)*
+        -> $ret_type:ident with |$cls:ident, $sel:ident| $body:tt)) => {{
+        extern "C" fn selector_fun($cls: &Class, $sel: Sel, $($sel_local_name:$sel_type),*) -> $ret_type $body
+        let selector_fun_extern: extern "C" fn(&Class, Sel, $($sel_type),*) -> $ret_type = selector_fun;
+
+        unsafe {
+            $class_dec.add_class_method(sel!($($sel_name:)*), selector_fun_extern);
+        }
+    }};
     ($class_dec:expr, ($access:ident $field_name:ident : $ty_name:ident)) => {
         add_pub_ivar!($access, $field_name, $class_dec, $ty_name);
     };
@@ -87,6 +96,9 @@ mod test {
             (sel add:(i32)t1 with:(i32)t2 -> i32 with |obj, sel| {
                 return t1+t2;
             }),
+            (static sel mul:(i32)t1 with:(i32)t2 -> i32 with |cls, sel| {
+                return t1*t2;
+            }),
         });
         let obj = unsafe {
             let obj: *mut Object = msg_send![my_box_class, alloc];
@@ -96,5 +108,8 @@ mod test {
         let x: i32 = unsafe { msg_send![*obj, add:5i32 with:6i32] };
 
         assert_eq!(x, 11);
+
+        let y: i32 = unsafe { msg_send![my_box_class, mul:5 with:6] };
+        assert_eq!(y, 30);
     }
 }
